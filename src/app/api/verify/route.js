@@ -1,3 +1,4 @@
+import { sendEmailToAdmin, sendEmailToUser } from "@/app/lib/sendEmail";
 import { NextResponse } from "next/server";
 const accessKey = "67fd230786fc9f9ed9c97e76fbec1c26";
 
@@ -10,6 +11,12 @@ export async function POST(request) {
   const response = await fetch(url);
 
   const data = await response.json();
+
+  // sending email to user
+  sendEmailToUser(body);
+
+  // sending email to admin
+  setTimeout(() => sendEmailToAdmin(body), 1200);
 
   if (data.valid) {
     return NextResponse.json({

@@ -13,6 +13,8 @@ const FormInput = ({
   placeholder,
   isTextArea = false,
   children,
+  isDisable = false,
+  value,
 }) => {
   const error = errors?.[name];
 
@@ -58,10 +60,12 @@ const FormInput = ({
         <input
           type={type}
           placeholder={placeholder}
+          value={value}
           className={`w-full px-3 py-2 text-sm sm:text-base rounded-lg border ${
             error ? "border-red-500" : "border-gray-500"
           } placeholder-gray-500 text-black focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all`}
           {...(register ? register(name, rules) : {})}
+          disabled={isDisable}
         />
       )}
 
