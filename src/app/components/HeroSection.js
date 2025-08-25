@@ -116,26 +116,14 @@ export default function HeroSection() {
           transition={{ delay: 0.9, duration: 0.8 }}
           className="flex flex-col sm:flex-row justify-center gap-4"
         >
+          {/* temporarily removed */}
           {/* <motion.button
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            className="cursor-pointer px-8 py-3 rounded-full font-medium shadow-lg hover:shadow-xl transition-all bg-[#2563eb]"
-            style={{
-              backgroundImage: "linear-gradient(to right, #2563eb, #4338ca)",
-              WebkitBackgroundImage:
-                "-webkit-linear-gradient(left, #2563eb, #4338ca)",
-            }}
-          >
-            <span className="relative text-white">Explore Adventures</span>
-          </motion.button> */}
-
-          <motion.button
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="cursor-pointer px-8 py-3 bg-transparent border-2 border-white rounded-full font-medium hover:bg-white/10 transition-all"
           >
             Customize Your Trip
-          </motion.button>
+          </motion.button> */}
         </motion.div>
       </div>
 

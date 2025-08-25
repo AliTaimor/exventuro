@@ -9,11 +9,11 @@ export async function POST(request) {
   const url = `http://apilayer.net/api/validate?access_key=${accessKey}&number=${body.phone}`;
 
   const response = await fetch(url);
-//  console.log("Numverify response status:", response.status);
+
   const data = await response.json();
 
   // sending email to user
-  sendEmailToUser(body);
+  await sendEmailToUser(body);
 
   // sending email to admin
   setTimeout(() => sendEmailToAdmin(body), 1200);
