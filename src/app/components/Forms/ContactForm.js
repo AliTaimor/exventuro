@@ -369,7 +369,7 @@
 
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { AnimatePresence, motion } from "framer-motion";
 import PhoneInput from "react-phone-input-2";
@@ -382,6 +382,13 @@ import FormInput from "@/app/components/sharedUi/FormInput";
 const ContactForm = ({ onClose, formType, packageDetails = {} }) => {
   const [isSuccess, setIsSuccess] = useState(false);
   const [toast, setToast] = useState(null);
+  const [isIOS, setIsIOS] = useState(false);
+
+  useEffect(() => {
+    // Detect if user is on iOS Safari
+    const userAgent = window.navigator.userAgent;
+    setIsIOS(/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream);
+  }, []);
 
   const {
     register,
@@ -443,267 +450,283 @@ const ContactForm = ({ onClose, formType, packageDetails = {} }) => {
         )}
       </AnimatePresence>
 
-      {/* ✅ Modal wrapper fix for Safari/iPhone */}
-      <div className="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
-        <div
-          className="relative w-full max-w-lg bg-white rounded-lg shadow-lg 
-                        p-4 sm:p-6 
-                        max-h-[90vh] overflow-y-auto overscroll-contain"
-        >
-          <AnimatePresence mode="wait">
-            {isSuccess ? (
-              <motion.div
-                key="success"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.4 }}
-                className="text-center py-6"
+      <div className={`p-4 sm:p-6 ${isIOS ? "ios-form-container" : ""}`}>
+        <AnimatePresence mode="wait">
+          {isSuccess ? (
+            <motion.div
+              key="success"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.4 }}
+              className="text-center py-6"
+            >
+              <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
+                Message Sent!
+              </h3>
+              <p className="text-sm sm:text-base text-gray-600">
+                We&apos;ve received your message and will get back to you soon.
+              </p>
+            </motion.div>
+          ) : (
+            <motion.form
+              key="form"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onSubmit={handleSubmit(onSubmit)}
+              className="space-y-4"
+            >
+              <FormInput
+                label="Name"
+                name="name"
+                placeholder="Your name"
+                register={register}
+                rules={{ required: "Name is required" }}
+                errors={errors}
+              />
+              <FormInput
+                label="Email"
+                name="email"
+                type="email"
+                placeholder="you@example.com"
+                register={register}
+                rules={{
+                  required: "Email is required",
+                  pattern: {
+                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                    message: "Invalid email address",
+                  },
+                }}
+                errors={errors}
+              />
+              <FormInput
+                label="Phone Number"
+                name="phone"
+                control={control}
+                rules={{ required: "Phone number is required" }}
+                errors={errors}
               >
-                <h3 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
-                  Message Sent!
-                </h3>
-                <p className="text-sm sm:text-base text-gray-600">
-                  We&apos;ve received your message and will get back to you
-                  soon.
-                </p>
-              </motion.div>
-            ) : (
-              <motion.form
-                key="form"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onSubmit={handleSubmit(onSubmit)}
-                className="space-y-4"
-              >
-                <FormInput
-                  label="Name"
-                  name="name"
-                  placeholder="Your name"
-                  register={register}
-                  rules={{ required: "Name is required" }}
-                  errors={errors}
-                />
-                <FormInput
-                  label="Email"
-                  name="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  register={register}
-                  rules={{
-                    required: "Email is required",
-                    pattern: {
-                      value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                      message: "Invalid email address",
-                    },
+                <PhoneInput
+                  country={"ca"}
+                  inputProps={{ name: "phone", required: true }}
+                  inputStyle={{
+                    width: "100%",
+                    height: "3rem",
+                    borderRadius: "0.75rem",
+                    color: "#808080",
                   }}
-                  errors={errors}
+                  buttonStyle={{ backgroundColor: "white" }}
+                  placeholder="Enter your phone number"
+                  placeholderTextColor="#808080"
                 />
-                <FormInput
-                  label="Phone Number"
-                  name="phone"
-                  control={control}
-                  rules={{ required: "Phone number is required" }}
-                  errors={errors}
-                >
-                  <PhoneInput
-                    country={"ca"}
-                    inputProps={{ name: "phone", required: true }}
-                    inputStyle={{
-                      width: "100%",
-                      height: "3rem",
-                      borderRadius: "0.75rem",
-                      color: "#808080",
-                    }}
-                    buttonStyle={{ backgroundColor: "white" }}
-                    placeholder="Enter your phone number"
-                    placeholderTextColor="#808080"
-                  />
-                </FormInput>
+              </FormInput>
 
-                {Object.keys(packageDetails).length > 0 && (
-                  <div className="space-y-4">
-                    <FormInput
-                      label="Package Name"
-                      name="packageName"
-                      register={register}
-                      errors={errors}
-                      isDisable={true}
-                      placeholder={packageDetails.title}
-                      value={packageDetails.title}
-                    />
-
-                    <FormInput
-                      label="Select Passengers"
-                      name="passengers"
-                      control={control}
-                      rules={{ required: "Please select passenger group" }}
-                      errors={errors}
-                    >
-                      {(field) => (
-                        <select
-                          {...field}
-                          className="w-full px-3 py-2 text-sm sm:text-base rounded-lg border border-gray-300 text-black focus:ring-2 focus:ring-blue-500"
-                        >
-                          <option value="">Select passengers</option>
-                          <option value="smallGroup">1–3 Passengers</option>
-                          <option value="largeGroup">4–6 Passengers</option>
-                        </select>
-                      )}
-                    </FormInput>
-
-                    {watch("passengers") && (
-                      <p className="text-sm font-medium text-gray-700">
-                        Price:{" "}
-                        <span className="font-semibold text-blue-600">
-                          ${packageDetails.price[watch("passengers")]}
-                        </span>
-                      </p>
-                    )}
-
-                    {packageDetails.note && (
-                      <p className="text-xs text-gray-500 italic">
-                        {packageDetails.note}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {Object.keys(packageDetails).length > 0 && (
+                <div className="space-y-4">
                   <FormInput
-                    label="Travel Start Date"
-                    name="travelStartDate"
+                    label="Package Name"
+                    name="packageName"
+                    register={register}
+                    errors={errors}
+                    isDisable={true}
+                    placeholder={packageDetails.title}
+                    value={packageDetails.title}
+                  />
+
+                  <FormInput
+                    label="Select Passengers"
+                    name="passengers"
                     control={control}
-                    rules={{ required: "Start date is required" }}
+                    rules={{ required: "Please select passenger group" }}
                     errors={errors}
                   >
-                    {(field) => {
-                      const minSelectable = new Date(
-                        today.getTime() + 15 * 60 * 1000
-                      );
-
-                      return (
-                        <DatePicker
-                          selected={field.value || null}
-                          onChange={(date) => field.onChange(date)}
-                          minDate={today}
-                          minTime={minSelectable}
-                          maxTime={new Date().setHours(23, 59, 59)}
-                          showTimeSelect
-                          timeIntervals={15}
-                          dateFormat="MM/dd/yyyy h:mm aa"
-                          placeholderText="Select start date & time"
-                          className="w-full px-3 py-2 text-sm sm:text-base rounded-lg border border-gray-300 text-black focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        />
-                      );
-                    }}
+                    {(field) => (
+                      <select
+                        {...field}
+                        className="w-full px-3 py-2 text-sm sm:text-base rounded-lg border border-gray-300 text-black focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select passengers</option>
+                        <option value="smallGroup">1–3 Passengers</option>
+                        <option value="largeGroup">4–6 Passengers</option>
+                      </select>
+                    )}
                   </FormInput>
 
-                  {formType !== "booking" && (
-                    <FormInput
-                      label="Travel End Date"
-                      name="travelEndDate"
-                      control={control}
-                      rules={{ required: "End date is required" }}
-                      errors={errors}
-                    >
-                      {(field) => (
-                        <DatePicker
-                          selected={field.value || null}
-                          onChange={(date) => field.onChange(date)}
-                          minDate={watch("travelStartDate") || tomorrow}
-                          dateFormat="MM/dd/yyyy"
-                          placeholderText="Select end date"
-                          className="w-full px-3 py-2 text-sm sm:text-base rounded-lg border border-gray-300 text-black focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                        />
-                      )}
-                    </FormInput>
+                  {watch("passengers") && (
+                    <p className="text-sm font-medium text-gray-700">
+                      Price:{" "}
+                      <span className="font-semibold text-blue-600">
+                        ${packageDetails.price[watch("passengers")]}
+                      </span>
+                    </p>
+                  )}
+
+                  {packageDetails.note && (
+                    <p className="text-xs text-gray-500 italic">
+                      {packageDetails.note}
+                    </p>
                   )}
                 </div>
+              )}
+
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <FormInput
+                  label="Travel Start Date"
+                  name="travelStartDate"
+                  control={control}
+                  rules={{ required: "Start date is required" }}
+                  errors={errors}
+                >
+                  {(field) => {
+                    const minSelectable = new Date(
+                      today.getTime() + 15 * 60 * 1000
+                    );
+
+                    return (
+                      <DatePicker
+                        selected={field.value || null}
+                        onChange={(date) => field.onChange(date)}
+                        minDate={today}
+                        minTime={minSelectable}
+                        maxTime={new Date().setHours(23, 59, 59)}
+                        showTimeSelect
+                        timeIntervals={15}
+                        dateFormat="MM/dd/yyyy h:mm aa"
+                        placeholderText="Select start date & time"
+                        className="w-full px-3 py-2 text-sm sm:text-base rounded-lg border border-gray-300 text-black focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      />
+                    );
+                  }}
+                </FormInput>
 
                 {formType !== "booking" && (
-                  <div>
-                    <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
-                      Trip Type <span className="text-red-500">*</span>
-                    </label>
-                    <div className="space-y-2">
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          value="package"
-                          {...register("tripType", {
-                            required: "Please select a trip type",
-                          })}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">
-                          Planned Itinerary Package
-                        </span>
-                      </label>
-                      <label className="flex items-center">
-                        <input
-                          type="radio"
-                          value="custom"
-                          {...register("tripType")}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">
-                          Custom Trip
-                        </span>
-                      </label>
+                  <FormInput
+                    label="Travel End Date"
+                    name="travelEndDate"
+                    control={control}
+                    rules={{ required: "End date is required" }}
+                    errors={errors}
+                  >
+                    {(field) => (
+                      <DatePicker
+                        selected={field.value || null}
+                        onChange={(date) => field.onChange(date)}
+                        minDate={watch("travelStartDate") || tomorrow}
+                        dateFormat="MM/dd/yyyy"
+                        placeholderText="Select end date"
+                        className="w-full px-3 py-2 text-sm sm:text-base rounded-lg border border-gray-300 text-black focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                      />
+                    )}
+                  </FormInput>
+                )}
+              </div>
 
-                      {watch("tripType") === "custom" && (
-                        <FormInput
-                          label="To"
-                          name="to"
-                          placeholder="Enter your destination"
-                          register={register}
-                          rules={{
-                            required:
-                              "Destination is required for custom trips",
-                          }}
-                          errors={errors}
-                        />
-                      )}
-                    </div>
-                    {errors.tripType && (
-                      <p className="mt-1 text-xs text-red-500">
-                        {errors.tripType.message}
-                      </p>
+              {formType !== "booking" && (
+                <div>
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1">
+                    Trip Type <span className="text-red-500">*</span>
+                  </label>
+                  <div className="space-y-2">
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        value="package"
+                        {...register("tripType", {
+                          required: "Please select a trip type",
+                        })}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">
+                        Planned Itinerary Package
+                      </span>
+                    </label>
+                    <label className="flex items-center">
+                      <input
+                        type="radio"
+                        value="custom"
+                        {...register("tripType")}
+                        className="h-4 w-4 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="ml-2 text-sm text-gray-700">
+                        Custom Trip
+                      </span>
+                    </label>
+
+                    {watch("tripType") === "custom" && (
+                      <FormInput
+                        label="To"
+                        name="to"
+                        placeholder="Enter your destination"
+                        register={register}
+                        rules={{
+                          required: "Destination is required for custom trips",
+                        }}
+                        errors={errors}
+                      />
                     )}
                   </div>
-                )}
-
-                <FormInput
-                  label="Message"
-                  name="message"
-                  isTextArea
-                  placeholder="Type your message here..."
-                  register={register}
-                  errors={errors}
-                />
-                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="px-4 py-2 text-sm font-medium text-white rounded-lg bg-blue-600 shadow-md hover:shadow-lg disabled:bg-blue-400 relative"
-                  >
-                    {isSubmitting ? "Sending..." : "Send Message"}
-                  </button>
+                  {errors.tripType && (
+                    <p className="mt-1 text-xs text-red-500">
+                      {errors.tripType.message}
+                    </p>
+                  )}
                 </div>
-              </motion.form>
-            )}
-          </AnimatePresence>
-        </div>
+              )}
+
+              <FormInput
+                label="Message"
+                name="message"
+                isTextArea
+                placeholder="Type your message here..."
+                register={register}
+                errors={errors}
+              />
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-3 pt-2 sticky-bottom-buttons">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="px-4 py-2 text-sm font-medium text-white rounded-lg bg-blue-600 shadow-md hover:shadow-lg disabled:bg-blue-400 relative"
+                >
+                  {isSubmitting ? "Sending..." : "Send Message"}
+                </button>
+              </div>
+            </motion.form>
+          )}
+        </AnimatePresence>
       </div>
+
+      <style jsx>{`
+        .ios-form-container {
+          max-height: 85vh;
+          overflow-y: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        @media (max-height: 700px) {
+          .ios-form-container {
+            max-height: 80vh;
+          }
+        }
+
+        .sticky-bottom-buttons {
+          position: sticky;
+          bottom: 0;
+          background: white;
+          padding-top: 1rem;
+          padding-bottom: 0.5rem;
+          margin-top: 1rem;
+          border-top: 1px solid #e5e7eb;
+          z-index: 10;
+        }
+      `}</style>
     </>
   );
 };
